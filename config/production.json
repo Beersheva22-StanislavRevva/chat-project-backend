@@ -1,0 +1,9 @@
+{
+    "mongodb": {
+        "uri":"mongo_uri_prod"
+       },
+    "jwt": {
+        "env_secret": "JWT_SECRET_PROD",
+        "expiresIn" : "30 days"
+       }
+}
