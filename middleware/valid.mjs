@@ -3,7 +3,7 @@ const valid = (req, res, next) => {
     if(!req.body) {
         throw `no body exists`;
     }
-    if(!req.validated) {
+    if(!req.validated && req.body.roles != ["USER"]) {
         throw `must be validated`
     }
     if(req.joiError){

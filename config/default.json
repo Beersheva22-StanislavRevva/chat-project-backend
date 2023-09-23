@@ -3,8 +3,8 @@
       "port":3500
   },
   "mongodb": {
-      "env_uri":"ATLAS_URI_COMPANY_TEST",
-      "db":"company"
+      "env_uri":"ATLAS_URI_CHATPROJECT_TEST",
+      "db":"chatproject"
   },
   "jwt": {
       "env_secret":"JWT_SECRET_TEST",

@@ -10,11 +10,25 @@ const usersService = new UsersService()
 const schema = Joi.object({
     username: Joi.string().email().required(),
     password: Joi.string().min(8).required(),
-    roles: Joi.array().items(Joi.string().valid('ADMIN', 'USER')).required()
+    roles: Joi.array().items(Joi.string().valid('ADMIN', 'USER')).required(),
+    nickname: Joi.string().required(),
+    active: Joi.number().valid(0, 1).required().required(),
+    blocked: Joi.number().valid(0, 1).required().required(),
+    avatar: Joi.string()
 })
 users.use(validate(schema))
-users.post('', authVerification("ADMIN_ACCOUNTS"), valid,  asyncHandler(async (req, res) => {
+users.post('', valid,  asyncHandler(async (req, res) => {
     
+    const accountRes = await usersService.addAccount(req.body);
+    if (accountRes == null) {
+        res.status(400);
+        throw `account ${req.body.username} already exists`
+    }
+     res.status(201).send(accountRes);
+  
+}));
+users.use(validate(schema))
+users.post("/admin", authVerification("ADMIN_ACCOUNTS"), valid,  asyncHandler(async (req, res) => {
     const accountRes = await usersService.addAccount(req.body);
     if (accountRes == null) {
         res.status(400);
