@@ -1,6 +1,6 @@
-import express from 'express'
-import asyncHandler from 'express-async-handler'
-import Joi from 'joi'
+import express from 'express';
+import asyncHandler from 'express-async-handler';
+import Joi from 'joi';
 import { validate } from '../middleware/validation.mjs';
 import UsersService from '../service/UsersService.mjs';
 import authVerification from '../middleware/authVerification.mjs';
@@ -44,7 +44,7 @@ users.get("/:username",authVerification("ADMIN_ACCOUNTS", "ADMIN", "USER"), asyn
         const account = await usersService.getAccount(username);
         if (!account) {
             res.status(404);
-            throw `account ${username} notfound`
+            throw `account ${username} not found`
         }
         res.send(account);
     }
@@ -60,3 +60,29 @@ users.post("/login", asyncHandler(
         res.send({accessToken});
     }
 ))
+users.post("/block", authVerification("ADMIN"), asyncHandler(
+    async(req, res) => {
+        const username = req.body.username;
+        const status = req.body.blocked;
+        const account = await usersService.setBlocked(username, status);
+        if (account == null) {
+            res.status(404);
+            throw `account ${username} not found`
+        }
+         res.send(`blocked status of account ${account} is ${status}`);
+    }
+));
+users.get("/maingroup/:status",authVerification("ADMIN_ACCOUNTS", "ADMIN", "USER"), asyncHandler(
+    async (req,res) => {
+        const status = req.params.status;
+        const accounts = await usersService.getMainGroup(status);
+        
+        res.send(accounts.map(acc => {
+            const objSend = {
+                username: acc.username,
+                nickname: acc.nickname          
+            }
+            return objSend;
+        }));
+    }
+));

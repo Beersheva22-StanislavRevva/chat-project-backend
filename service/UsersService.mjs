@@ -41,6 +41,40 @@ export default class UserService {
         }
         return accessToken;
     }
+
+    async setOnline(clientName, status) {
+        const doc = await this.#collection.updateOne({_id: clientName},
+            {$set:{active:status}});
+        return doc.matchedCount == 1 ? clientName : null;
+    }
+
+    async setBlocked(clientName, status) {
+        const doc = await this.#collection.updateOne({_id: clientName},
+            {$set:{blocked:status}});
+        return doc.matchedCount == 1 ? clientName : null;
+    }
+
+    async getMainGroup(type) {
+        let conditions;
+        let res;
+        switch(type) {
+            case 'online':
+                conditions = [ {"active":1},{"blocked":0}]
+                res = (await this.#collection.find({$and: conditions}).toArray()).map(toAccount);
+                break;
+            case 'offline':
+                conditions = [ {"active":0},{"blocked":0}]
+                res = (await this.#collection.find({$and: conditions}).toArray()).map(toAccount);
+                break;
+            case 'blocked':
+                conditions = [ {},{"blocked":1}]
+                res = (await this.#collection.find({$and: conditions}).toArray()).map(toAccount);
+                break;        
+
+        }
+        return res;
+
+    }
 }
 
 function getJwt(username, roles) {

@@ -41,7 +41,8 @@ messages.post('',authVerification("ADMIN","USER"), valid, asyncHandler(
             throw `message with id ${req.body.id} already exists`
         }
         if(req.wss) {
-            req.wss.clients.forEach(c => c.send(JSON.stringify({op:'add', data:message})))
+           req.wss.clients.forEach(c => c.send(JSON.stringify({op:'add', data:message})))
+           
         }
         res.send(message);
     }
