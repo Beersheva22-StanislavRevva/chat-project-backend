@@ -6,7 +6,7 @@ const MONGO_ENV_URI = 'mongodb.env_uri';
 const MONGO_DB_NAME = 'mongodb.db';
 const ENV_JWT_SECTRET = 'jwt.env_secret'
 
-export default class UserService {
+export default class UsersService {
     #collection
     constructor() {
         const connection_string = process.env[config.get(MONGO_ENV_URI)];
@@ -42,38 +42,14 @@ export default class UserService {
         return accessToken;
     }
 
-    async setOnline(clientName, status) {
-        const doc = await this.#collection.updateOne({_id: clientName},
-            {$set:{active:status}});
-        return doc.matchedCount == 1 ? clientName : null;
-    }
-
     async setBlocked(clientName, status) {
         const doc = await this.#collection.updateOne({_id: clientName},
             {$set:{blocked:status}});
         return doc.matchedCount == 1 ? clientName : null;
     }
 
-    async getMainGroup(type) {
-        let conditions;
-        let res;
-        switch(type) {
-            case 'online':
-                conditions = [ {"active":1},{"blocked":0}]
-                res = (await this.#collection.find({$and: conditions}).toArray()).map(toAccount);
-                break;
-            case 'offline':
-                conditions = [ {"active":0},{"blocked":0}]
-                res = (await this.#collection.find({$and: conditions}).toArray()).map(toAccount);
-                break;
-            case 'blocked':
-                conditions = [ {},{"blocked":1}]
-                res = (await this.#collection.find({$and: conditions}).toArray()).map(toAccount);
-                break;        
-
-        }
-        return res;
-
+    async getAllAccounts() {
+          return ((await this.#collection.find({"_id":{$not:{$eq:"root"}}}).toArray()).map(toAccount));
     }
 }
 

@@ -2,17 +2,18 @@ import express from 'express';
 import asyncHandler from 'express-async-handler';
 import Joi from 'joi';
 import { validate } from '../middleware/validation.mjs';
-import UsersService from '../service/UsersService.mjs';
 import authVerification from '../middleware/authVerification.mjs';
 import valid from '../middleware/valid.mjs';
+import UsersService from '../service/UsersService.mjs';
+
+export const usersService = new UsersService();
 export const users = express.Router();
-const usersService = new UsersService()
+
 const schema = Joi.object({
     username: Joi.string().email().required(),
     password: Joi.string().min(8).required(),
     roles: Joi.array().items(Joi.string().valid('ADMIN', 'USER')).required(),
     nickname: Joi.string().required(),
-    active: Joi.number().valid(0, 1).required().required(),
     blocked: Joi.number().valid(0, 1).required().required(),
     avatar: Joi.string()
 })
@@ -72,17 +73,9 @@ users.post("/block", authVerification("ADMIN"), asyncHandler(
          res.send(`blocked status of account ${account} is ${status}`);
     }
 ));
-users.get("/maingroup/:status",authVerification("ADMIN_ACCOUNTS", "ADMIN", "USER"), asyncHandler(
+users.get("",authVerification("ADMIN", "USER"), asyncHandler(
     async (req,res) => {
-        const status = req.params.status;
-        const accounts = await usersService.getMainGroup(status);
-        
-        res.send(accounts.map(acc => {
-            const objSend = {
-                username: acc.username,
-                nickname: acc.nickname          
-            }
-            return objSend;
-        }));
+       const accounts = await usersService.getAllAccounts();
+        res.send(accounts);
     }
 ));

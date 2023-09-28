@@ -97,3 +97,80 @@ messages.get('/from/:sendername/to/:recepientname', authVerification("ADMIN", "U
 messages.get('/contacts', (req, res) => {
     res.send(chatRoom.getClients());
 });
+messages.ws('/websocket/:clientName', async (ws, req) => {
+    console.log(`connection from ${req.socket.remoteAddress}`)
+    ws.send("Hello");
+    wss.clients.forEach(socket => socket.send(`number of connections is ${wss.clients.size}, protocol ${ws.protocol}`))
+    const clientName = req.params.clientName;
+    const isExists = await isAccountExist(clientName);
+    if (!isExists)  {
+         ws.send("sender account does not exist ");
+         ws.close();
+        } else {
+            processConnection(clientName, ws);
+        }
+    
+})
+function processConnection(clientName, ws) {
+    const connectionId = crypto.randomUUID();
+    chatRoom.addConnection(clientName, connectionId, ws);
+    const online = usersService.setOnline(clientName, 1);
+    ws.on('close', () => {
+        chatRoom.removeConnection(connectionId)
+        const offline = usersService.setOnline(clientName, 0)
+        });
+    ws.on('message', processMessage.bind(undefined, clientName, ws));
+}
+async function processMessage(clientName, ws, message) {
+        try{
+            const messageObj = JSON.parse(message.toString());
+            const to = messageObj.to;
+            const text = messageObj.text;
+            const dateTime = messageObj.dateTime;
+            if(!text) {
+                ws.send("your message doesn't contain text")
+            } else {
+                const message = {from: clientName, text:text, to:to, dateTime:dateTime, readByRecepient:0};
+                const msgRes = await messagesService.addMessage(message);
+                const objSent = JSON.stringify(msgRes);
+                if(!to || to == 'all') {
+                    sendAll(objSent)
+                } else {
+                    const user = await usersService.getAccount(to);
+                    if (user.active == 1 && user.blocked == 0){
+                        sendClient(objSent, to, ws);
+                    } else{
+                         user.blocked == 0 ? ws.send(`${user.nickname} is unactive`) : ws.send(`${user.nickname} is blocked`); 
+                        }
+                    }
+                    
+                }
+        } catch(error) {
+            ws.send('wrong mesage structure')
+        }
+     
+}
+function sendAll(mesage) {
+    chatRoom.getAllWebsockets().forEach(ws => ws.send(mesage));
+}
+function sendClient(mesage, client, socketFrom) {
+    
+    const clientSockets = chatRoom.getClientWebSockets(client);
+    if(clientSockets.length == 0) {
+        socketFrom.send(client + " contact doesn't exist");
+    }  else {
+        clientSockets.forEach(s => s.send(mesage));
+    }    
+}
+async function isAccountExist (clientName) {
+    const res = await usersService.getAccount(clientName);
+    return res == null ? false : true;
+}
+async function isBlocked(clientName) {
+    const res = await usersService.getAccount(clientName);
+    return res.blocked == 0 ? false : true;
+}
+async function isActive(clientName) {
+    const res = await usersService.getAccount(clientName);
+    return res.active == 0 ? false : true;
+}
