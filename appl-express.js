@@ -9,7 +9,6 @@ import errorHandler from './middleware/errorHandler.mjs';
 import auth from './middleware/auth.mjs';
 import {messages, messagesService, chatRoom} from './routes/messages.mjs';
 import expressWs from 'express-ws';
-import ChatRoom from './service/ChatRoom.mjs'
 import MessagesService from './service/MessagesService.mjs';
 import UsersService from './service/UsersService.mjs';
 
@@ -21,10 +20,9 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(morgan('tiny'));
 app.use(auth);
-app.ws('/messages/websocket/:clientName', async (ws, req) => {
+app.ws('/users/websocket/:clientName', async (ws, req) => {
     console.log(`connection from ${req.socket.remoteAddress}`)
     ws.send("Hello");
-    wss.clients.forEach(socket => socket.send(`number of connections is ${wss.clients.size}, protocol ${ws.protocol}`))
     const clientName = req.params.clientName;
     const isBlocked = await isAccountBlocked(clientName);
     if (isBlocked)  {
@@ -32,6 +30,7 @@ app.ws('/messages/websocket/:clientName', async (ws, req) => {
          ws.close();
         } else {
             processConnection(clientName, ws);
+            wss.clients.forEach(socket => socket.send(`number of connections is ${wss.clients.size}, protocol ${ws.protocol}`))
         }
     
 })
@@ -53,8 +52,8 @@ function processConnection(clientName, ws) {
     const connectionId = crypto.randomUUID();
     chatRoom.addConnection(clientName, connectionId, ws);
     ws.on('close', () => {
-        chatRoom.removeConnection(connectionId)
-        const offline = usersService.setOnline(clientName, 0)
+        chatRoom.removeConnection(connectionId);
+        wss.clients.forEach(socket => socket.send(`number of connections is ${wss.clients.size}, protocol ${ws.protocol}`))
         });
     ws.on('message', processMessage.bind(undefined, clientName, ws));
 }

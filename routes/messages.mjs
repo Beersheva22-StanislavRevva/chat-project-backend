@@ -7,7 +7,6 @@ import authVerification from "../middleware/authVerification.mjs";
 import Joi from 'joi'
 import valid from '../middleware/valid.mjs';
 import ChatRoom from '../service/ChatRoom.mjs';
-import { usersService } from './users.mjs';
 
 
 export const messages = express.Router();

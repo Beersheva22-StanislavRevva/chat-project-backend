@@ -62,13 +62,13 @@ function getJwt(username, roles) {
 
 function toAccount(accountdb) {
     const res = {username: accountdb._id, roles: accountdb.roles, passwordHash: accountdb.passwordHash, nickname: accountdb.nickname,
-        active:accountdb.active, blocked: accountdb.blocked, avatar: accountdb.avatar};
+        blocked: accountdb.blocked, avatar: accountdb.avatar};
     return res;
 }
 
 async function toAccountDB(account) {
     const passwordHash = await bcrypt.hash(account.password, 10); 
     const res = {_id: account.username, passwordHash, roles:account.roles, nickname: account.nickname,
-        active:account.active, blocked: account.blocked, avatar: account.avatar}
+        blocked: account.blocked, avatar: account.avatar}
       return res;
 }
