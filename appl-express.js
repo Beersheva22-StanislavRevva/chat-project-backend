@@ -62,7 +62,7 @@ async function processMessage(clientName, ws, message) {
             const messageObj = JSON.parse(message.toString());
             const to = messageObj.to;
             const text = messageObj.text;
-            const dateTime = messageObj.dateTime;
+            const dateTime = new Date().toLocaleString();
             if(!text) {
                 ws.send("your message doesn't contain text")
             } else {

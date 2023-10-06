@@ -70,6 +70,9 @@ users.post("/block", authVerification("ADMIN"), asyncHandler(
             res.status(404);
             throw `account ${username} not found`
         }
+        if(req.wss) {
+            req.wss.clients.forEach(c => c.send(JSON.stringify({op:'block', data: username})))
+        }
          res.send(`blocked status of account ${account} is ${status}`);
     }
 ));
